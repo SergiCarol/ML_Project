@@ -28,3 +28,21 @@ vignettes/*.pdf
 # Temporary files created by R markdown
 *.utf8.md
 *.knit.md
+
+
+# Latex Files
+**/.Rproj.user
+
+**/*.aux
+**/*.fdb_latexmk
+**/*.fls
+**/*.log
+**/*.out
+**/*.gz
+**/*.bcf
+**/*.run.xml
+**/*.tex~
+**/*.toc
+**/*.pdf
+
+
