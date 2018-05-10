@@ -65,7 +65,6 @@ combo = rbind(ale_style, ipa_style, stout_style, lager_style, bitter_style, cide
 combo = subset(combo, select= -c(Style, URL, StyleID, BeerID, Efficiency))
 
 head(combo)
-?grep
 
 # Set factors
 
@@ -73,37 +72,34 @@ combo$Name = as.character(combo$Name)
 combo[is.na(combo$Name),1] = "Unknown Beer"
 combo$Name = as.factor(combo$Name)
 combo$type = as.factor(combo$type)
+combo$SugarScale = as.factor(combo$SugarScale)
 droplevels(combo$type)
 droplevels(combo$Name)
-
-combo$FD = abs(combo$OG - combo$FG)
-combo$OG = combo$FG = NULL
+droplevels(combo$SugarScale)
 
 # Impute Boil Gravity
 # a = knnImputation(data = combo, k=5)
 
 # Check for Outliers, remove all bigger than 658 since thats the most bitter beer in the world (else all outliers)
 combo = combo[combo$IBU < 658,]
-combo = combo[combo$ABV < (mean(combo$ABV)  + 3 * sd(combo$ABV)),]
+combo = combo[combo$Color < 50] # MAX BLACK is 50
+#combo = combo[combo$ABV < (mean(combo$ABV)  + 3 * sd(combo$ABV)),]
 
-combo.bak = combo
-
-#for (i in c(3,4,5,6,7,12)){
-#  combo= combo[combo[,i] < (mean(combo[,i])  + 3 * sd(combo[,i])),]
-#}
-  
 for (i in c(3,4,5,6,7,12)){
   plot(density(combo[,i]), main=colnames(combo)[i])
-  
 }
-
-summary(combo.bak)
-summary(combo)
 
 # PCA
 combo.pca = subset(combo, select = -c(BoilGravity, Name))
+#beer.df = subset(combo.pca, select = -c(Size.L., SugarScale, BrewMethod, type))
+#distances <- mahalanobis(scale(beer.df), center=FALSE, cov=cov(beer.df))
+#cutoff_value <- sqrt(qchisq(0.975, ncol(beer.df)))
+#combo.pca <- combo.pca[distances < cutoff_value,]
+
 par(mfrow=c(1,2))
-pca = PCA(combo.pca, quanti.sup = c(1, 5), quali.sup = c(7, 8, 9))
+pca = PCA(combo.pca, quanti.sup = c(1, 7), quali.sup = c(9, 10, 11))
+
+plot(combo.pca$type, combo.pca$Color, col=c(2:8)) # Cloud be interesting?
 
 pca$eig
 fviz_pca_ind(pca, col.ind = "contrib")
@@ -114,9 +110,6 @@ nd = 3
 # Cluster
 
 Psi = pca$ind$coord[, 1:nd]
-# dist_matrix = dist(Psi)
-# write.matrix(dist_matrix, "dist_matrix.csv")
-#cluster <- hclust(dist_matrix, method='ward.D2')
 
 # Cluster for large data
 n1 = 50
@@ -147,12 +140,8 @@ abline(h=0,v=0,col="gray")
 legend("bottomright",c("c1","c2", "c3", "c4", "c5", "c6", "c7"),pch=20,col=c(1:7))
 #points(cdg, col="blue")
 text(k6$centers,labels=c("G1","G2", "G3", "G4", "G5", "G6", "G7"),col="blue")
-k6_graph <- k6$cluster
-
-levels(as.factor(k6_graph)) = (c("red", "green", "blue", "pink", "orange", "grey", "skyblue"))
 
 rgl::plot3d(Psi, col=k6$cluster)
 points3d(pca$quali.sup$coord[levels(combo.pca$type), 1:3], col = "orange", size=10)
 text3d(pca$quali.sup$coord[levels(combo.pca$type), 1:3], texts = levels(combo.pca$type), col="yellow")
-text3d(Psi, texts = k6$cluster)
-k6_graph = k6_graph[,c("red", "green", "blue", "pink", "orange", "grey", "skyblue")]
+
