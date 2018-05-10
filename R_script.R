@@ -4,7 +4,8 @@ requiredPackages <- c("FactoMineR",
                       "calibrate",
                       "ggplot2",
                       "ggrepel",
-                      "DMwR")
+                      "DMwR",
+                      "rgl")
 
 for (pac in requiredPackages) {
   if(!require(pac,  character.only=TRUE)){
@@ -15,6 +16,7 @@ for (pac in requiredPackages) {
 rm(pac)
 rm(requiredPackages)
 
+set.seed(123)
 
 # Read
 recipe <- read.csv('recipeData.csv',na.strings = "N/A", fileEncoding = "ISO-8859-1")
@@ -74,21 +76,34 @@ combo$type = as.factor(combo$type)
 droplevels(combo$type)
 droplevels(combo$Name)
 
+combo$FD = abs(combo$OG - combo$FG)
+combo$OG = combo$FG = NULL
 
 # Impute Boil Gravity
-a = knnImputation(data = combo, k=5)
+# a = knnImputation(data = combo, k=5)
 
 # Check for Outliers, remove all bigger than 658 since thats the most bitter beer in the world (else all outliers)
 combo = combo[combo$IBU < 658,]
+combo = combo[combo$ABV < (mean(combo$ABV)  + 3 * sd(combo$ABV)),]
 
-plot(combo$IBU)
-text(combo$IBU, labels=combo$Name)
-# TODO: Do scatter matrix
+combo.bak = combo
+
+#for (i in c(3,4,5,6,7,12)){
+#  combo= combo[combo[,i] < (mean(combo[,i])  + 3 * sd(combo[,i])),]
+#}
+  
+for (i in c(3,4,5,6,7,12)){
+  plot(density(combo[,i]), main=colnames(combo)[i])
+  
+}
+
+summary(combo.bak)
+summary(combo)
 
 # PCA
 combo.pca = subset(combo, select = -c(BoilGravity, Name))
 par(mfrow=c(1,2))
-pca = PCA(combo.pca, quanti.sup = c(1, 7), quali.sup = c(9, 10, 11))
+pca = PCA(combo.pca, quanti.sup = c(1, 5), quali.sup = c(7, 8, 9))
 
 pca$eig
 fviz_pca_ind(pca, col.ind = "contrib")
@@ -104,14 +119,14 @@ Psi = pca$ind$coord[, 1:nd]
 #cluster <- hclust(dist_matrix, method='ward.D2')
 
 # Cluster for large data
-n1 = 100
-k1 <- kmeans(Psi, n1)
-k2 <- kmeans(Psi, n1)
+n1 = 50
+k1 <- kmeans(Psi, n1, iter.max=19) # Converges at 19
+k2 <- kmeans(Psi, n1, iter.max=19)
 table(k2$cluster,k1$cluster)
 clas <- (k2$cluster-1)*n1+k1$cluster
 freq <- table(clas) 
 cdclas <- aggregate(as.data.frame(Psi),list(clas),mean)[,2:(nd+1)]
-cdclas
+
 d2 <- dist(cdclas)
 h2 <- hclust(d2,method="ward.D2",members=freq) # COMPARE THE COST
 plot(h2)
@@ -132,4 +147,12 @@ abline(h=0,v=0,col="gray")
 legend("bottomright",c("c1","c2", "c3", "c4", "c5", "c6", "c7"),pch=20,col=c(1:7))
 #points(cdg, col="blue")
 text(k6$centers,labels=c("G1","G2", "G3", "G4", "G5", "G6", "G7"),col="blue")
+k6_graph <- k6$cluster
 
+levels(as.factor(k6_graph)) = (c("red", "green", "blue", "pink", "orange", "grey", "skyblue"))
+
+rgl::plot3d(Psi, col=k6$cluster)
+points3d(pca$quali.sup$coord[levels(combo.pca$type), 1:3], col = "orange", size=10)
+text3d(pca$quali.sup$coord[levels(combo.pca$type), 1:3], texts = levels(combo.pca$type), col="yellow")
+text3d(Psi, texts = k6$cluster)
+k6_graph = k6_graph[,c("red", "green", "blue", "pink", "orange", "grey", "skyblue")]
