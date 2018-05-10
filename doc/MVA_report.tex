@@ -25,6 +25,39 @@ Because of this, many supporting communities that share techniques and recipes o
 The aim of this project is to use all the recipes provided in this website and study them, applying the multivariate techniques seen during this course to see how they relate to each other, and also see if they can be classified and, in case they are, that the corresponding classification corresponds to the existing styles.
 
 \section{Preprocessing}
+
+Before starting to do the preprocessing on the data, we first have to familiarize with it.
+
+The total number of dimensions in this dataset is 23, with 73861 individuals. This dimensions are:
+\begin{itemize}
+  \item \textbf{BeerId}. Id of the individual beer.
+  \item \textbf{Name} of the beer.
+  \item \textbf{URL} on where to find the recipe of the beer.
+  \item \textbf{Style} of brew, as name.
+  \item \textbf{Style id} of brew. Numeric.
+  \item \textbf{Size} in Liters of the amount of beer brewed with this recipe.
+  \item \textbf{OG}, which refers to the gravity of wort before fermentation.
+  \item \textbf{FG}, which refers to the gravity of wort after fermentation.
+  \item \textbf{ABV}, which is the acronym of Alcohol By Volume.
+  \item \textbf{IBU}, which refers to the Internation Bittering Units.
+  \item \textbf{Color} of the beer. The higher the darker the beer is. I.e. 40 means the beer is dark.
+  \item \textbf{BoilSize}, the size of the fluid at the beginning of the boil.
+  \item \textbf{BoilTime}, the total amount of time the beer boils.
+  \item \textbf{BoilGravity}, the specific gravity of wort before boiling.
+  \item \textbf{Efficiency}. Beer mash extraction efficiency. How efficient it is on extracting the sugars from the grain during the mash.
+  \item \textbf{Mash Thickness}, which refers to the amount of water per pound of grain.
+  \item \textbf{Sugar scale}, which determines the concentration of dissolved solids in the wort.
+  \item \textbf{Brew method}, the technique used to brew the beer.
+  \item \textbf{Pitch Rate}, the yeast added to the fermentor per gravity unit (M cells/ml/deg P).
+  \item \textbf{Primary Temperature} at the fermenting stage.
+  \item \textbf{Priming method} technique.
+  \item \textbf{Priming amount} of sugar used.
+  \item \textbf{User Id}, id of the user that submitted the recipe.
+\end{itemize}
+
+
+
+
 % todo Explain each variable in the data
 
 \section{Protocol of validation}
