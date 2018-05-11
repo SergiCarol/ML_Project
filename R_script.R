@@ -81,9 +81,13 @@ droplevels(combo$SugarScale)
 # a = knnImputation(data = combo, k=5)
 
 # Check for Outliers, remove all bigger than 658 since thats the most bitter beer in the world (else all outliers)
+plot(combo$IBU)
+
 combo = combo[combo$IBU < 658,]
-combo = combo[combo$Color < 50] # MAX BLACK is 50
+combo = combo[combo$Color <= 50] # MAX BLACK is 50
 #combo = combo[combo$ABV < (mean(combo$ABV)  + 3 * sd(combo$ABV)),]
+
+plot(combo.pca, combo.pca$Color, col=c(2:8))
 
 for (i in c(3,4,5,6,7,12)){
   plot(density(combo[,i]), main=colnames(combo)[i])
