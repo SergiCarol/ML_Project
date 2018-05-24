@@ -303,4 +303,13 @@ plot.prediction ("RBF")
 # expected in most machine learning algortithms as a more accurate function will usually be more 
 # computationally expensive.
 
-# We see that we get a fairly large error on this dataset using SVM. 
+
+# We see that we get a fairly large error on predicting the type of beer from this dataset using SVM. The 
+# reason for this is most likely a combination of several factors that makes SVMs unsuited for this data. 
+# First of all SVMs are not good when there is a large imbalance in the number of members to each class, 
+# with Ale and IPA being highly over-represented in the dataset compared to the other classes this makes 
+# SVMs a bad fit. Also SVMs are not well suited for datasets with multiple classes which ours also has. 
+
+# We can see that by classifying the beer as IPA or not IPA, thereby reducing the number of classes to two 
+# and also evening out the members of each class, we get a much better result. This supports the theory 
+# above that SVMs are a bad fit.
