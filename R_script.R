@@ -248,43 +248,5 @@ plot(c_des)
 
 beers.df <- data.frame("Cluster" = as.factor(k6$cluster), combo.pca)
 
-totalRows =  nrow(beers.df)
-testRange = seq(0.6*totalRows, totalRows)
 
-trainingData <- beers.df[-testRange,]
-testData <- beers.df[testRange,]
-
-#### Random Forest ####
-rf <- randomForest(formula = Cluster ~ .,
-                   data=trainingData,
-                   importance=TRUE,
-                   xtest=subset(testData, select= -Cluster),
-                   ytest=testData$Cluster,
-                   keep.forest=TRUE)
-
-print(rf)
-(accuracy <- rf$err.rate)
-plot(rf)
-legend("topright", colnames(rf$err.rate), col=1:5, cex=0.8, fill=1:5)
-
-#rf_predict <- predict(rf, testData)
-
-#(results <- table(testData$Cluster, rf_predict))
-tree <- getTree(rf, k=200)
-tree
-x <- ctree(Cluster ~ ., data=trainingData)
-plot(x, type="simple")
-
-par(mfrow=c(2,2))
-
-cr <- colorRamp(c("blue", "red"))
-
-#for (i in 1:4){
-#  plot(rf$importance[,i], col= rgb(cr(rf$importance[,i]/max(rf$importance[,i])), max=255), ylab="Importance", main=paste("Cluster ", i,sep=""))
-#  text(rf$importance[,i], labels = rownames(rf$importance), pos=2, col= rgb(cr(rf$importance[,i]/max(rf$importance[,i])), max=255))
-#}
-
-for (i in 1:4){
-  barplot(rf$importance[,i], col= rgb(cr(rf$importance[,i]/max(rf$importance[,i])), max=255), ylab="Importance", main=paste("Cluster ", i,sep=""))
-}
 
