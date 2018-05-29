@@ -248,5 +248,5 @@ plot(c_des)
 
 beers.df <- data.frame("Cluster" = as.factor(k6$cluster), combo.pca)
 
-
+pie(table(beers.df$type))
 

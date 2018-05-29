@@ -251,10 +251,10 @@ beers.df <- data.frame("Cluster" = as.factor(k6$cluster), combo.pca)
 droplevels(beers.df$Cluster)
 
 totalRows =  nrow(beers.df)
-testRange = seq(0.8*totalRows, totalRows)
 
-trainingData <- beers.df[testRange,]
-testData <- beers.df[-testRange,]
+rows <- sample(totalRows, round(totalRows*0.8))
+trainingData <- beers.df[rows,]
+testData <- beers.df[-rows,]
 
 #### Random Forests ####
 # (ntrees <- round(10^seq(1,3,by=0.2)))
