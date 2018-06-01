@@ -121,21 +121,28 @@ varUsed(rf, by.tree=FALSE, count = TRUE)
 
 
 
-
-
 #### Multinomial classiffier ####
 
-# Needs tunning
-
 multi <- multinom(type ~ ., data=trainingData)
+# # weights:  119 (96 variable)
+# initial value 81062.724989 
+# iter 100 value 44511.404646
+# final value 44511.404646 
+summary(multi)
+(z <- summary(multi)$coefficients/summary(multi)$standard.errors)
+(p <- (1 - pnorm(abs(z), 0, 1))*2) #pvalues
+exp(coef(multi))
+
 results <- predict(multi, testData)
 
 (results <- table(testData$type, results))
 (accuracy <- sum(diag(results))/nrow(testData))
 
 
+
 #### Gradient Boost ####
 # https://machinelearningmastery.com/gentle-introduction-xgboost-applied-machine-learning/
+
 xgbGrid <- expand.grid(nrounds = 50,
                        max_depth = 10,
                        eta = .05,
