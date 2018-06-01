@@ -158,3 +158,12 @@ results <- predict(StyleXGB, testData)
 (results <- table(testData$type, results))
 (accuracy <- sum(diag(results))/nrow(testData))
 
+
+#### Neural Networks ####
+
+nn <- nnet(type ~ ., data=trainingData, size=30, maxit=500)
+results <- predict(nn, testData, type = "class")
+
+(results <- table(testData$type, results))
+(accuracy <- sum(diag(results))/nrow(testData))
+
