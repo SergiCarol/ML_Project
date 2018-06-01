@@ -4,7 +4,8 @@ requiredPackages <- c("readr",
                       "rgl", "randomForest", "ROCR",
                       "rpart",
                       "dplyr", "sampling",
-                      "class")
+                      "class",
+                      "nnet", "caret")
 
 for (pac in requiredPackages) {
   if(!require(pac,  character.only=TRUE)){
@@ -24,11 +25,8 @@ beers.df$Cluster <- as.factor(beers.df$Cluster)
 droplevels(beers.df$Cluster)
 
 
-beers.df$Cluster <- as.factor(beers.df$type)
-droplevels(beers.df$Cluster)
-
 totalRows =  nrow(beers.df)
-testRange = seq(0.6*totalRows, totalRows)
+# testRange = seq(0.6*totalRows, totalRows)
 
 size_training <- 0.8*totalRows/7
 
@@ -41,8 +39,7 @@ testData <- beers.df[-rows,]
 # trainingData$ID_unit = NULL
 # trainingData$Stratum = NULL
 # trainingData$Prob =NULL
-# 
-testData <- beers.df[testRange,]
+# testData <- beers.df[testRange,]
 
 
 #### Cross Validation ####
@@ -93,8 +90,7 @@ rf <- randomForest(formula = type ~ .,
                    importance=TRUE,
                    xtest=subset(testData, select= -type),
                    ytest=testData$type,
-                   keep.forest = TRUE,
-                   proximity=TRUE)
+                   keep.forest = TRUE)
 plot(rf)
 legend("topright", colnames(rf$err.rate), col=1:5, cex=0.8, fill=1:5)
 
@@ -161,3 +157,4 @@ results <- predict(StyleXGB, testData)
 
 (results <- table(testData$type, results))
 (accuracy <- sum(diag(results))/nrow(testData))
+
