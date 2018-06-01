@@ -3,8 +3,12 @@ setwd("~/projects/school/ML/ML_Project")
 ## the SVM is located in two different packages: one of them is 'e1071'
 library(e1071)
 
+beers.df <- read.csv("beers.csv")
+dataset <- subset(beers.df, select = c(IBU, ABV, Size.L., OG, BoilSize, BoilTime, Color, Gsum, type))
+
 # Use only the numeric variables for the SVM
-dataset <- subset(combo.pca, select = c(IBU, ABV, Size.L., OG, BoilSize, BoilTime, Color, Gsum, type))
+#dataset <- subset(combo.pca, select = c(IBU, ABV, Size.L., OG, BoilSize, BoilTime, Color, Gsum, type))
+
 
 ## Now we define a utility function for performing k-fold CV
 ## the learning data is split into k equal sized parts
@@ -14,15 +18,15 @@ dataset <- subset(combo.pca, select = c(IBU, ABV, Size.L., OG, BoilSize, BoilTim
 
 ## using k-folds cross validation 
 k <- 10 
-N <- 39
+N <- nrow(dataset)
 folds <- sample(rep(1:k, length=N), N, replace=FALSE) 
 valid.error <- rep(0,k)
 
 
 
-dataset$type <- as.character(dataset$type)
-dataset$type[dataset$type != "IPA"] <- "notIpa"
-dataset$type <- as.factor(dataset$type)
+#dataset$type <- as.character(dataset$type)
+#dataset$type[dataset$type != "IPA"] <- "notIpa"
+#dataset$type <- as.factor(dataset$type)
 
 
 C <- 1
@@ -39,10 +43,10 @@ train.svm.kCV <- function (which.kernel, mycost)
     t_train <- train[,9]
     
     switch(which.kernel,
-           linear={model <- svm(x_train, t_train, type="C-classification", cost=mycost, kernel="linear", scale = FALSE)},
-           poly.2={model <- svm(x_train, t_train, type="C-classification", cost=mycost, kernel="polynomial", degree=2, coef0=1, scale = FALSE)},
-           poly.3={model <- svm(x_train, t_train, type="C-classification", cost=mycost, kernel="polynomial", degree=3, coef0=1, scale = FALSE)},
-           RBF={model <- svm(x_train, t_train, type="C-classification", cost=mycost, kernel="radial", scale = FALSE)},
+           linear={model <- svm(x_train, factor(t_train), type="C-classification", cost=mycost, kernel="linear", scale = FALSE)},
+           poly.2={model <- svm(x_train, factor(t_train), type="C-classification", cost=mycost, kernel="polynomial", degree=2, coef0=1, scale = FALSE)},
+           poly.3={model <- svm(x_train, factor(t_train), type="C-classification", cost=mycost, kernel="polynomial", degree=3, coef0=1, scale = FALSE)},
+           RBF={model <- svm(x_train, factor(t_train), type="C-classification", cost=mycost, kernel="radial", scale = FALSE)},
            stop("Enter one of 'linear', 'poly.2', 'poly.3', 'radial'"))
     
     x_valid <- valid[,1:8]
@@ -57,23 +61,23 @@ train.svm.kCV <- function (which.kernel, mycost)
 }
 
 # Fit an SVM with different kernels
-(VA.error.linear <- train.svm.kCV ("linear", C))
-(VA.error.poly.2 <- train.svm.kCV ("poly.2", C))
-(VA.error.poly.3 <- train.svm.kCV ("poly.3", C))
+#(VA.error.linear <- train.svm.kCV ("linear", C))
+#(VA.error.poly.2 <- train.svm.kCV ("poly.2", C))
+#(VA.error.poly.3 <- train.svm.kCV ("poly.3", C))
 (VA.error.RBF <- train.svm.kCV ("RBF", C))
 
 # Trying with varying the cost
-C <- 50
-(VA.error.linear <- train.svm.kCV ("linear", C))
-(VA.error.RBF <- train.svm.kCV ("RBF", C))
+#C <- 50
+#(VA.error.linear <- train.svm.kCV ("linear", C))
+#(VA.error.RBF <- train.svm.kCV ("RBF", C))
 
-C <- 5
-(VA.error.linear <- train.svm.kCV ("linear", C))
-(VA.error.RBF <- train.svm.kCV ("RBF", C))
+#C <- 5
+#(VA.error.linear <- train.svm.kCV ("linear", C))
+#(VA.error.RBF <- train.svm.kCV ("RBF", C))
 
-C <- 0.05
-(VA.error.linear <- train.svm.kCV ("linear", C))
-(VA.error.RBF <- train.svm.kCV ("RBF", C))
+#C <- 0.05
+#(VA.error.linear <- train.svm.kCV ("linear", C))
+#(VA.error.RBF <- train.svm.kCV ("RBF", C))
 
 
 # The support vector machines algorithm is a very good algorithm to classify data. 
