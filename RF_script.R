@@ -26,31 +26,20 @@ droplevels(beers.df$Cluster)
 
 
 totalRows =  nrow(beers.df)
-# testRange = seq(0.6*totalRows, totalRows)
 
-size_training <- 0.8*totalRows/7
-
-#stratified <- strata(beers.df,"type" ,size = rep(size_training,7), method = "srswor") # With repetitions or not enough data for cider
 rows <- sample(totalRows, round(totalRows*0.8))
 trainingData <- beers.df[rows,]
 testData <- beers.df[-rows,]
-#trainingData <- getdata(beers.df, stratified)
-
-# trainingData$ID_unit = NULL
-# trainingData$Stratum = NULL
-# trainingData$Prob =NULL
-# testData <- beers.df[testRange,]
-
 
 #### Cross Validation ####
 
 
 
 #### Random Forests ####
-# (ntrees <- round(10^seq(1,3,by=0.2)))
-# 
-# # prepare the structure to store the partial results
-# 
+# Parameter selection
+#(ntrees <- round(10^seq(1,3,by=0.2)))
+# prepare the structure to store the partial results
+
 # rf.results <- matrix (rep(0,2*length(ntrees)),nrow=length(ntrees))
 # colnames (rf.results) <- c("ntrees", "OOB")
 # rf.results[,"ntrees"] <- ntrees
@@ -77,7 +66,8 @@ testData <- beers.df[-rows,]
 # lowest.OOB.error <- as.integer(which.min(rf.results[,"OOB"]))
 # (ntrees.best <- rf.results[lowest.OOB.error,"ntrees"])
 
-# bestmtry <- tuneRF(trainingData[, -11], trainingData[,11], stepFactor=1.5, ntree=500)
+# Find the best mtry parameter
+# bestmtry <- tuneRF(trainingData[, -11], trainingData[,11], stepFactor=1.5, ntree=600)
 
 # Best result is with 600 trees, with mtry 2
 
@@ -86,7 +76,7 @@ testData <- beers.df[-rows,]
 rf <- randomForest(formula = type ~ .,
                    data=trainingData,
                    ntree=600,
-                   mtry=2,
+                   mtry=3,
                    importance=TRUE,
                    xtest=subset(testData, select= -type),
                    ytest=testData$type,
@@ -110,7 +100,7 @@ cr <- colorRamp(c("blue", "red"))
 
 for (i in 1:7){
   plot(rf$importance[,i], col= rgb(cr(abs(rf$importance[,i]/max(rf$importance[,i]))), maxColorValue=255), ylab="Importance", main=colnames(rf$importance)[i])
-  text(rf$importance[,i], labels = rownames(rf$importance), pos=2, col= rgb(cr(rf$importance[,i]/max(rf$importance[,i])), max=255))
+  text(rf$importance[,i], labels = rownames(rf$importance), pos=2, col= rgb(cr(abs(rf$importance[,i]/max(rf$importance[,i]))), maxColorValue=255))
 }
 
 barplot(rf$importance, ylab="Importance", main=paste("Cluster ", i,sep=""))
@@ -141,8 +131,8 @@ results <- predict(multi, testData)
 
 
 #### Gradient Boost ####
-# https://machinelearningmastery.com/gentle-introduction-xgboost-applied-machine-learning/
 
+# Parameter tunning
 xgbGrid <- expand.grid(nrounds = 50,
                        max_depth = 10,
                        eta = .05,
@@ -150,7 +140,7 @@ xgbGrid <- expand.grid(nrounds = 50,
                        colsample_bytree = .9,
                        min_child_weight = 1,
                        subsample = 1)
-
+# Model
 StyleXGB = train(type ~ ., data = trainingData,
                  method = "xgbTree",
                  tuneGrid = xgbGrid,na.action = na.pass,
@@ -165,12 +155,34 @@ results <- predict(StyleXGB, testData)
 (results <- table(testData$type, results))
 (accuracy <- sum(diag(results))/nrow(testData))
 
+class.error = rep(0, nrow(results))
+for (i in 1:nrow(results)){
+  class.error[i] <-1 - (results[i,i]/sum(results[i,]))
+  }
+cbind(results, class.error)
 
 #### Neural Networks ####
 
-nn <- nnet(type ~ ., data=trainingData, size=30, maxit=500)
-results <- predict(nn, testData, type = "class")
+# Model selection, be adivsed this takes a LONG time to finish.
+# fitControl <- trainControl(method = "repeatedcv", 
+#                            number = 5, 
+#                            repeats = 5)
+# 
+# nnetGrid <-  expand.grid(size = seq(from = 10, to = 15, by = 1),
+#                          decay = seq(from = 0.0, to = 0.4, by = 0.1))
+# 
+# nnetFit <- train(type ~ ., 
+#                  data = trainingData,
+#                  method = "nnet",
+#                  metric = "Accuracy",
+#                  #trControl = fitControl,
+#                  tuneGrid = nnetGrid,
+#                  verbose = FALSE,
+#                  maxit=500)
+
+# NN model
+nnet.results <- nnet(type ~ ., data=trainingData, size=10, maxit=500, decay=0.1)
+results <- predict(nnet.results, testData, type="class")
 
 (results <- table(testData$type, results))
 (accuracy <- sum(diag(results))/nrow(testData))
-
