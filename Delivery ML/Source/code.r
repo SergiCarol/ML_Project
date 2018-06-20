@@ -1,3 +1,12 @@
+### README ###
+# This files contains both the pre processing of the data and the models.
+# It is important to note that we are using two different files
+# The recipeData.csv is the original data
+# The beers.csv is the file with all the pre processed data, as such
+# it is not needed to execute the pre processing all the time but it
+# is possible to start running the program from the MODELS section
+
+
 # Load and install necessary packages
 requiredPackages <- c("FactoMineR",
                       "factoextra",
@@ -22,8 +31,6 @@ set.seed(123)
 # Read
 recipe <- read.csv('recipeData.csv',na.strings = "N/A", fileEncoding = "ISO-8859-1")
   head(recipe)
-style <- read.csv('stylerecipe.csv')
-  head(style)
 
 str(recipe)
 summary(recipe)
@@ -197,9 +204,6 @@ set.seed(123)
 
 
 beers.df <- read.csv("beers.csv")
-
-beers.df$Cluster <- as.factor(beers.df$Cluster)
-droplevels(beers.df$Cluster)
 
 
 totalRows =  nrow(beers.df)
