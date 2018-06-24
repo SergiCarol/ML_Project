@@ -22,12 +22,13 @@ set.seed(123)
 # Read
 recipe <- read.csv('recipeData.csv',na.strings = "N/A", fileEncoding = "ISO-8859-1")
   head(recipe)
-style <- read.csv('stylerecipe.csv')
-  head(style)
 
 str(recipe)
 summary(recipe)
 table(is.na(recipe))
+nrow(recipe[!complete.cases(recipe),])
+nrow(recipe)
+
 #library(FactoMineR)
 #catdes(recipe,1)
 
@@ -42,15 +43,19 @@ levels(as.factor(recipe$Style))
 recipe = subset(recipe, select = -c(MashThickness, UserId, PrimingAmount, PrimingMethod, PrimaryTemp, PitchRate))
 
 ale =  recipe[grep("Ale", recipe$Style, ignore.case=TRUE),]
-  
+
 american_ale_style =  recipe[grep("American Pale Ale", recipe$Style, ignore.case=TRUE),]
   american_ale_style$type = "American Ale"
 
 ale_style <- ale[!(ale$BeerID %in% american_ale_style$BeerID),]
   ale_style$type  = "Ale"
-
+  levels(as.factor(ale$Style)) # Know how many ALE are...
+  levels(as.factor(ale_style$Style)) # Know how many ALE are...
+  levels(as.factor(american_ale_style$Style)) # Know how many American ALE are...
+  
 ipa_style =  recipe[grep("IPA", recipe$Style, ignore.case=TRUE),]
   ipa_style$type  = "IPA"
+  levels(as.factor(ipa_style$Style)) # Know how many IPA are...
 
 stout_style =  recipe[grep("Stout", recipe$Style, ignore.case=TRUE),]
   stout_style$type  = "Stout"
@@ -88,6 +93,10 @@ combo$SugarScale =  droplevels(combo$SugarScale)
 # Impute Boil Gravity
 # a = knnImputation(data = combo, k=5)
 
+summary(combo)
+dim(combo)
+levels(combo$type)
+table(combo$type)
 # Check for Outliers, remove all bigger than 658 since thats the most bitter beer in the world (else all outliers)
 plot(combo$IBU)
 
