@@ -91,17 +91,32 @@ combo$Name =  droplevels(combo$Name)
 combo$SugarScale =  droplevels(combo$SugarScale)
 
 # Impute Boil Gravity
-# a = knnImputation(data = combo, k=5)
+SHOULD_IMPUTE = FALSE
+fileName = "BoilGravityImputed.csv"
+if(SHOULD_IMPUTE){
+    a = knnImputation(data = combo, k=5)    
+    write.csv2(x = a, file = fileName)
+} else {
+    a = read.csv2(file = fileName, header = TRUE, stringsAsFactors = TRUE)
+    a$Name = as.character(a$Name)
+}
+
+comboOld = combo
+combo = a 
+
+# TODO Laura 24/6/18: From this point onwards we have to verify that the results have not changed!!
 
 summary(combo)
 dim(combo)
 levels(combo$type)
 table(combo$type)
+
 # Check for Outliers, remove all bigger than 658 since thats the most bitter beer in the world (else all outliers)
 plot(combo$IBU)
 
 combo = combo[combo$IBU < 658,]
 combo = combo[combo$Color <= 100,] # MAX BLACK is 50
+dim(combo)
 
 combo$Size.L. = log(combo$Size.L.)
 combo$BoilSize = log(combo$BoilSize)
