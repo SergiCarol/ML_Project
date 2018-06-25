@@ -17,6 +17,19 @@ for (pac in requiredPackages) {
 rm(pac)
 rm(requiredPackages)
 
+getIndexByName <- function(df, name) {
+    return (grep(name, colnames(df)))
+}
+
+
+getIndexesByName <- function(df, columnNames) {
+    indexes = c()
+    for(col in columnNames) {
+        indexes = append(indexes, getIndexByName(df, col))
+    } 
+    return (indexes)
+}
+
 set.seed(123)
 
 # Read
@@ -41,6 +54,8 @@ recipe$Style = as.character(recipe$Style)
 levels(as.factor(recipe$Style))
 
 recipe = subset(recipe, select = -c(MashThickness, UserId, PrimingAmount, PrimingMethod, PrimaryTemp, PitchRate))
+nrow(recipe[!complete.cases(recipe),])
+nrow(recipe)
 
 ale =  recipe[grep("Ale", recipe$Style, ignore.case=TRUE),]
 
@@ -79,6 +94,9 @@ combo = subset(combo, select= -c(Style, URL, StyleID, BeerID, Efficiency))
 
 head(combo)
 
+combo$Gsum=combo$OG+combo$FG
+combo$FG = NULL
+
 # Set factors
 
 combo$Name = as.character(combo$Name)
@@ -90,6 +108,9 @@ combo$type =  droplevels(combo$type)
 combo$Name =  droplevels(combo$Name)
 combo$SugarScale =  droplevels(combo$SugarScale)
 
+nrow(combo[!complete.cases(combo),])
+nrow(combo)
+
 # Impute Boil Gravity
 SHOULD_IMPUTE = FALSE
 fileName = "BoilGravityImputed.csv"
@@ -98,13 +119,11 @@ if(SHOULD_IMPUTE){
     write.csv2(x = a, file = fileName)
 } else {
     a = read.csv2(file = fileName, header = TRUE, stringsAsFactors = TRUE)
+    a$X <- NULL
     a$Name = as.character(a$Name)
 }
 
-comboOld = combo
 combo = a 
-
-# TODO Laura 24/6/18: From this point onwards we have to verify that the results have not changed!!
 
 summary(combo)
 dim(combo)
@@ -112,27 +131,50 @@ levels(combo$type)
 table(combo$type)
 
 # Check for Outliers, remove all bigger than 658 since thats the most bitter beer in the world (else all outliers)
-plot(combo$IBU)
+plot(combo$IBU, main = "IBU")
+abline(h=658, col="red")
+
+plot(combo$Color, main = "Color")
+abline(h=100, col="red")
+
 
 combo = combo[combo$IBU < 658,]
 combo = combo[combo$Color <= 100,] # MAX BLACK is 50
 dim(combo)
 
+
+hist(combo$Size.L., main = "Size L")
+hist(combo$BoilSize, main = "Boil Size")
+
 combo$Size.L. = log(combo$Size.L.)
 combo$BoilSize = log(combo$BoilSize)
 
-combo$Gsum=combo$OG+combo$FG
 
-combo$FG = NULL
+hist(combo$Size.L., main = "Size L")
+hist(combo$BoilSize, main = "Boil Size")
 
-plot(combo$type, combo$Color, col=c(2:10))
 
+dev.off()
+plot(combo$type, combo$Color, main = "Color per type", col=c(2:10), xlab = "Type", ylab = "Color")
+plot(combo$type, combo$IBU, main = "IBU per type", col=c(2:10), xlab = "Type", ylab = "IBU")
+
+# More plots
 for (i in c(3,4,5,6,7,12)){
   plot(density(combo[,i]), main=colnames(combo)[i])
 }
 
+
+###### VALIDATION #####
+totalRows = nrow(combo)
+
+rows <- sample(totalRows, round(totalRows*0.8))
+trainingData <- combo[rows,]
+testData <- combo[-rows,]
+
+combo.pca <- trainingData
+
 #### PCA  ####
-combo.pca = subset(combo, select = -c(BoilGravity, Name))
+combo.pca = subset(combo.pca, select = -c(BoilGravity, Name))
 
 rgl::plot3d(combo.pca$type, combo.pca$Color, combo.pca$IBU, col=as.numeric(combo.pca$type))
 
@@ -140,9 +182,15 @@ rgl::plot3d(combo.pca$type, combo.pca$Color, combo.pca$IBU, col=as.numeric(combo
 #distances <- mahalanobis(scale(beer.df), center=FALSE, cov=cov(beer.df))
 #cutoff_value <- sqrt(qchisq(0.975, ncol(beer.df)))
 #combo.pca <- combo.pca[distances < cutoff_value,]
-
 par(mfrow=c(1,2))
-pca = PCA(combo.pca, quanti.sup = c(1, 6), quali.sup = c(8, 9, 10))
+
+quantiSup = c("Size.L.", 
+              "BoilSize")
+qualiSup = c("SugarScale", "BrewMethod", "type")
+
+pca = PCA(combo.pca, quanti.sup = getIndexesByName(combo.pca, quantiSup),
+          quali.sup = getIndexesByName(combo.pca, qualiSup))
+
 pca$var$cos2
 
 plot(combo.pca$type, combo.pca$Color, col=c(2:10)) # Cloud be interesting?
