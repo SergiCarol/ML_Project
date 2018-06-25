@@ -6,7 +6,8 @@ requiredPackages <- c("FactoMineR",
                       "ggrepel",
                       "DMwR",
                       "rgl", "randomForest", "ROCR",
-                      "rpart")
+                      "rpart",
+                      "Hotelling")
 
 for (pac in requiredPackages) {
   if(!require(pac,  character.only=TRUE)){
@@ -34,8 +35,10 @@ set.seed(123)
 
 # Read
 recipe <- read.csv('recipeData.csv',na.strings = "N/A", fileEncoding = "ISO-8859-1")
-  head(recipe)
+rownames(recipe) <- NULL
 
+
+head(recipe)
 str(recipe)
 summary(recipe)
 table(is.na(recipe))
@@ -93,6 +96,7 @@ combo = rbind(ale_style, ipa_style, stout_style, lager_style, bitter_style, cide
 combo = subset(combo, select= -c(Style, URL, StyleID, BeerID, Efficiency))
 
 head(combo)
+rownames(combo) <- NULL
 
 # Set factors
 
@@ -165,13 +169,18 @@ for (i in c(3,4,5,6,7,12)){
 
 
 ###### VALIDATION #####
+rownames(combo) <- NULL
 totalRows = nrow(combo)
 
 rows <- sample(totalRows, round(totalRows*0.8))
 trainingData <- combo[rows,]
 testData <- combo[-rows,]
 
-combo.pca <- trainingData
+
+testDataRows <- as.numeric(rownames(testData))
+
+#combo.pca <- trainingData
+combo.pca <- combo
 
 summary(trainingData)
 summary(testData)
@@ -193,9 +202,10 @@ par(mfrow=c(1,2))
 quantiSup = c("Size.L.", 
               "BoilSize")
 qualiSup = c("SugarScale", "BrewMethod", "type")
-
+testDataRowsA = as.vector(testDataRows)
 pca = PCA(combo.pca, quanti.sup = getIndexesByName(combo.pca, quantiSup),
-          quali.sup = getIndexesByName(combo.pca, qualiSup))
+          quali.sup = getIndexesByName(combo.pca, qualiSup),
+          ind.sup = testDataRows)
 
 pca$var$cos2
 
@@ -234,7 +244,7 @@ Wss <- sum(k6$withinss)
 Ib6 <- 100*Bss/(Bss+Wss)
 Ib6
 
-plot(Psi, type="n",main="Clustering of countries in 2 clusters")
+plot(Psi, type="n",main="Clustering of beers in 5 clusters")
 text(Psi,col=k6$cluster, cex = 0.6)
 abline(h=0,v=0,col="gray")
 legend("bottomright",c("c1","c2", "c3", "c4", "c5", "c6", "c7"),pch=20,col=c(1:7))
@@ -329,6 +339,13 @@ beers.df <- data.frame("Cluster" = as.factor(k6$cluster), combo.pca)
 droplevels(beers.df$Cluster)
 
 totalRows =  nrow(beers.df)
+
+### VALIDATION ####
+#### PART 2 ####
+
+
+
+
 
 rows <- sample(totalRows, round(totalRows*0.8))
 trainingData <- beers.df[rows,]
