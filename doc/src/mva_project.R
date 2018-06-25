@@ -94,9 +94,6 @@ combo = subset(combo, select= -c(Style, URL, StyleID, BeerID, Efficiency))
 
 head(combo)
 
-combo$Gsum=combo$OG+combo$FG
-combo$FG = NULL
-
 # Set factors
 
 combo$Name = as.character(combo$Name)
@@ -124,6 +121,9 @@ if(SHOULD_IMPUTE){
 }
 
 combo = a 
+
+combo$Gsum=combo$OG+combo$FG
+combo$FG = NULL
 
 summary(combo)
 dim(combo)
@@ -172,6 +172,12 @@ trainingData <- combo[rows,]
 testData <- combo[-rows,]
 
 combo.pca <- trainingData
+
+summary(trainingData)
+summary(testData)
+
+table(trainingData$type)
+table(testData$type)
 
 #### PCA  ####
 combo.pca = subset(combo.pca, select = -c(BoilGravity, Name))
