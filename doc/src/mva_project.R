@@ -350,13 +350,9 @@ hot$pval
 # Since pval is > 0.05, we cannot reject the null hypothesis that they have the same mean of distr.
 
 
-
-
-rows <- sample(totalRows, round(totalRows*0.8))
-trainingData <- beers.df[rows,]
-testData <- beers.df[-rows,]
-
 #### Random Forests ####
+table(trainingData$type)
+table(testData$type)
 # (ntrees <- round(10^seq(1,3,by=0.2)))
 # 
 # # prepare the structure to store the partial results
@@ -371,12 +367,10 @@ testData <- beers.df[-rows,]
 # for (nt in ntrees) {
 #   print(nt)
 # 
-#   rf <- randomForest(formula = Cluster ~ .,
+#   rf <- randomForest(formula = type ~ .,
 #                      data=trainingData,
 #                      ntree=nt,
 #                      importance=TRUE,
-#                      xtest=subset(testData, select= -Cluster),
-#                      ytest=testData$Cluster,
 #                      keep.forest=TRUE)
 #   # get the OOB
 #   rf.results[ii,"OOB"] <- rf$err.rate[nt,1]
@@ -386,40 +380,28 @@ testData <- beers.df[-rows,]
 # rf.results
 # lowest.OOB.error <- as.integer(which.min(rf.results[,"OOB"]))
 # (ntrees.best <- rf.results[lowest.OOB.error,"ntrees"])
-
-# Best result is with 400 trees
-
-
-
-rf <- randomForest(formula = Cluster ~ .,
+# bestmtry <- tuneRF(trainingData[, -11], trainingData[,11], stepFactor=1.5, ntree=1000)
+# Best result is with 1000 trees and mtry 2
+rf <- randomForest(formula = type ~ .,
                    data=trainingData,
-                   ntree=400,
+                   ntree=1000,
+                   mtry=2,
                    importance=TRUE,
-                   xtest=subset(testData, select= -Cluster),
-                   ytest=testData$Cluster,
+                   xtest=subset(testData, select= -type),
+                   ytest=testData$type,
                    keep.forest = TRUE)
+
+print(rf)
+
 plot(rf)
 legend("topright", colnames(rf$err.rate), col=1:5, cex=0.8, fill=1:5)
 
-print(rf)
-(results <- table(testData$Cluster, rf_predict))
-(accuracy <- sum(diag(results))/nrow(testData))
 
-tree <- getTree(rf, k=200)
-tree
-x <- ctree(Cluster ~ ., data=trainingData)
-plot(x, type="simple")
-
-par(mfrow=c(2,2))
+par(mfrow=c(2,4))
 
 cr <- colorRamp(c("blue", "red"))
 
-#for (i in 1:4){
-#  plot(rf$importance[,i], col= rgb(cr(rf$importance[,i]/max(rf$importance[,i])), max=255), ylab="Importance", main=paste("Cluster ", i,sep=""))
-#  text(rf$importance[,i], labels = rownames(rf$importance), pos=2, col= rgb(cr(rf$importance[,i]/max(rf$importance[,i])), max=255))
-#}
-
-barplot(rf$importance, col= rgb(cr(rf$importance/max(rf$importance)), max=255), ylab="Importance", main=paste("Cluster ", i,sep=""))
-
-varImpPlot(rf)
-varUsed(rf, by.tree=FALSE, count = TRUE)
+for (i in 1:7){
+    plot(rf$importance[,i], col= rgb(cr(abs(rf$importance[,i]/max(rf$importance[,i]))), maxColorValue=255), ylab="Importance", main=colnames(rf$importance)[i])
+    text(rf$importance[,i], labels = rownames(rf$importance), pos=2,col= rgb(cr(abs(rf$importance[,i]/max(rf$importance[,i]))), maxColorValue=255))
+}
