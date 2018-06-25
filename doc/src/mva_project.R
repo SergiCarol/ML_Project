@@ -342,7 +342,12 @@ totalRows =  nrow(beers.df)
 
 ### VALIDATION ####
 #### PART 2 ####
+categoricalVals <- c("Name", "SugarScale", "BrewMethod", "type")
+idx = getIndexesByName(testData, categoricalVals)
 
+(hot = hotelling.test(testData[, -idx], trainingData[, -idx]))
+hot$pval
+# Since pval is > 0.05, we cannot reject the null hypothesis that they have the same mean of distr.
 
 
 
